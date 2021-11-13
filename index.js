@@ -20,6 +20,7 @@ async function run(){
     await client.connect();
     const database = client.db('buyCars');
     const servicesCollection = database.collection('services');
+    const usersCollection = database.collection('users');
 
     //Get API
     app.get('/services', async(req,res)=>{
@@ -42,11 +43,36 @@ async function run(){
     // POST API
     app.post('/services', async(req, res)=>{
         const service = req.body;
-        console.log('hit the post api', service);
         const result = await servicesCollection.insertOne(service);
+        res.json(result);
+    });
+
+    // POST API FOR USERS
+    app.post('/users', async(req,res)=>{
+        const user = req.body;
+        const result = await usersCollection.insertOne(user);
         console.log(result);
         res.json(result);
     });
+
+    // PUT USER AND ADMIN
+    app.put('/users', async(req,res)=>{
+        const user = req.body;
+        const filter = {email: user.email};
+        const options = {upsert: true};
+        const updateDoc = {$set: user};
+        const result = await usersCollection.updateOne(filter, updateDoc, options);
+        res.json(result);
+    });
+
+    app.put('/users/admin', async(req,res)=>{
+        const user = req.body;
+        const filter= {email: user.email};
+        const updateDoc = {$set: {role: 'admin'}};
+        const result = await usersCollection.updateOne(filter, updateDoc);
+        res.json(result);
+    })
+
 
     //Delete API
     app.delete('/services/:id', async(req, res)=>{
@@ -54,7 +80,7 @@ async function run(){
         const query ={_id:ObjectId(id)};
         const result = await servicesCollection.deleteOne(query);
         res.json(result);
-    })
+    });
 
  }
  finally{
